@@ -11,21 +11,26 @@ namespace MeltEngine.Entity
         public Action OnShow;
         public Action OnHide;
         
-        private bool enabled;
+        private bool _enabled;
         public bool Enabled
         {
-            get => enabled;
+            get => _enabled;
             set
             {
-                if(value) OnShow?.Invoke();
-                else OnHide?.Invoke();
-                
-                enabled = value;
+                if (value)
+                {
+                    OnShow?.Invoke();
+                } else
+                {
+                    OnHide?.Invoke();
+                }
+
+                _enabled = value;
             }
         }
 
         public readonly List<string> Tags = new();
-        private readonly List<Behaviour> Behaviours = new();
+        private readonly List<Behaviour> _behaviours = new();
 
         public GameObject(string name, bool enabled, string[] tags = null)
         {
@@ -41,9 +46,9 @@ namespace MeltEngine.Entity
         public void AddBehaviour(Behaviour behaviour)
         {
             behaviour.SetGameObject(this);
-            Behaviours.Add(behaviour);
+            _behaviours.Add(behaviour);
         }
 
-        public Behaviour GetBehaviour(Behaviour behaviour) => Behaviours?.Find(b => b == behaviour);
+        public Behaviour GetBehaviour(Behaviour behaviour) => _behaviours?.Find(b => b == behaviour);
     }
 }

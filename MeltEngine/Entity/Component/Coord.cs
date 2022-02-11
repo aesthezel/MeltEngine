@@ -9,14 +9,24 @@ namespace MeltEngine.Entity.Component
         public Vector4 Rotation { get; set; }
         public Vector3 Size { get; set; }
 
-        private void Start()
+        // private void Start()
+        // {
+        //     Console.WriteLine($"{gameObject.Name}: {Position}");
+        // }
+        //
+        // private void Update()
+        // {
+        //     Console.WriteLine($"{gameObject.Name}: {Rotation}");
+        // }
+
+        private void Show()
         {
-            Console.WriteLine($"{gameObject.Name}: {Position}");
+            Console.WriteLine($"{gameObject.Name}: Enabled!");
         }
 
-        private void Update()
+        private void Hide()
         {
-            Console.WriteLine($"{gameObject.Name}: {Rotation}");
+            Console.WriteLine($"{gameObject.Name}: Disabled!");
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿using MeltEngine.Entity;
-using Raylib_CsLo;
+﻿using Raylib_CsLo;
 
 namespace MeltEngine.Core
 {
@@ -9,10 +8,7 @@ namespace MeltEngine.Core
         {
             Raylib.InitWindow(width, height, name);
             Raylib.SetTargetFPS(frameRate);
-            
-            // TODO: class to prepare, or method...
-            GameObject goTest = new("Test", true);
-            
+
             Workflow.Run();
         }
     }

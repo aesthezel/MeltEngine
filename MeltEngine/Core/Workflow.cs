@@ -1,4 +1,5 @@
 ﻿using System;
+using MeltEngine.Entity;
 using Raylib_CsLo;
 
 namespace MeltEngine.Core
@@ -12,12 +13,18 @@ namespace MeltEngine.Core
 
         public static void Run()
         {
+            // TODO: Scenes goes here!
+            
+            GameObject goTest = new("Test", true);
+
             OnInit?.Invoke();
 
             while (!Raylib.WindowShouldClose())
             {
                 // Update
                 OnUpdate?.Invoke();
+                goTest.Enabled = !goTest.Enabled;
+                
                 // Draw frame
                 Raylib.BeginDrawing();
                 Raylib.ClearBackground(Raylib.RAYWHITE); // TODO: Add into a scene...
