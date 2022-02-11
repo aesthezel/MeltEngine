@@ -18,15 +18,5 @@ namespace MeltEngine.Entity.Component
         // {
         //     Console.WriteLine($"{gameObject.Name}: {Rotation}");
         // }
-
-        private void Show()
-        {
-            Console.WriteLine($"{gameObject.Name}: Enabled!");
-        }
-
-        private void Hide()
-        {
-            Console.WriteLine($"{gameObject.Name}: Disabled!");
-        }
     }
 }

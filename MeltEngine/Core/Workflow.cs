@@ -24,6 +24,8 @@ namespace MeltEngine.Core
                 // Update
                 OnUpdate?.Invoke();
 
+                goTest.Enabled = !goTest.Enabled;
+
                 // Draw frame
                 Raylib.BeginDrawing();
                 Raylib.ClearBackground(Raylib.RAYWHITE); // TODO: Add into a scene...
