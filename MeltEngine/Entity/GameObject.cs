@@ -8,8 +8,8 @@ namespace MeltEngine.Entity
     {
         public string Name { get; set; }
         
-        public Action OnShow;
-        public Action OnHide;
+        public event Action OnShow;
+        public event Action OnHide;
         
         private bool _enabled;
         public bool Enabled
@@ -34,19 +34,19 @@ namespace MeltEngine.Entity
 
         public GameObject(string name, bool enabled, string[] tags = null)
         {
+            var coord = new Coord();
+            AddBehaviour(coord);
+
             Name = name;
             Enabled = enabled;
             
             if(tags is not null) Tags.AddRange(tags);
-
-            var coord = new Coord();
-            AddBehaviour(coord);
         }
 
         public void AddBehaviour(Behaviour behaviour)
         {
-            behaviour.SetGameObject(this);
             _behaviours.Add(behaviour);
+            behaviour.SetGameObject(this);
         }
 
         public Behaviour GetBehaviour(Behaviour behaviour) => _behaviours?.Find(b => b == behaviour);

@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using MeltEngine.Core;
 
 namespace MeltEngine.Entity.Component
@@ -8,8 +9,8 @@ namespace MeltEngine.Entity.Component
         private readonly MethodInfo MethodStart;
         private readonly MethodInfo MethodUpdate;
         private readonly MethodInfo MethodRender;
-        private readonly MethodInfo MethodHide;
         private readonly MethodInfo MethodShow;
+        private readonly MethodInfo MethodHide;
         public GameObject gameObject { get; private set; }
 
         public Behaviour()
@@ -19,17 +20,51 @@ namespace MeltEngine.Entity.Component
             MethodRender = GetType().GetMethod("Render", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
             MethodShow = GetType().GetMethod("Show", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
             MethodHide = GetType().GetMethod("Hide", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-            
-            if(MethodStart is not null) Workflow.OnInit += () => MethodStart.Invoke(this, null);
-            if(MethodUpdate is not null) Workflow.OnUpdate += () => MethodUpdate.Invoke(this, null);
-            if(MethodRender is not null) Workflow.OnRender += () => MethodRender.Invoke(this, null);
+        }
+        
+        // ? HOTFIX: Avoid lambda subscriptions
+        private void START_BINDING() => MethodStart.Invoke(this, null);
+        private void UPDATE_BINDING() => MethodUpdate.Invoke(this, null);
+        private void RENDER_BINDING() => MethodRender.Invoke(this, null);
+        private void SHOW_BINDING() => MethodShow.Invoke(this, null);
+        private void HIDE_BINDING() => MethodHide.Invoke(this, null);
+
+        private void SubscribeWorkflow()
+        {
+            if (MethodStart is not null) Workflow.OnInit += START_BINDING;
+            if (MethodUpdate is not null) Workflow.OnUpdate += UPDATE_BINDING;
+            if (MethodRender is not null) Workflow.OnRender += RENDER_BINDING;
+        }
+
+        private void UnsubscribeWorkflow()
+        {
+            if (MethodStart is not null) Workflow.OnInit -= START_BINDING;
+            if (MethodUpdate is not null) Workflow.OnUpdate -= UPDATE_BINDING;
+            if (MethodRender is not null) Workflow.OnRender -= RENDER_BINDING;
         }
 
         public void SetGameObject(GameObject go)
         {
             gameObject = go;
-            if(MethodHide is not null) gameObject.OnShow += () => MethodShow.Invoke(this, null);
-            if(MethodShow is not null) gameObject.OnHide += () => MethodHide.Invoke(this, null);
+
+            if (MethodShow is not null) gameObject.OnShow += SHOW_BINDING;
+            if (MethodHide is not null) gameObject.OnHide += HIDE_BINDING;
+
+            gameObject.OnShow += SubscribeWorkflow;
+            gameObject.OnHide += UnsubscribeWorkflow;
+        }
+
+        public void DestroyGameObject(GameObject go)
+        {
+            gameObject.Enabled = false;
+
+            if(MethodShow is not null) gameObject.OnShow -= SHOW_BINDING;
+            if(MethodHide is not null) gameObject.OnHide -= HIDE_BINDING;
+
+            gameObject.OnShow -= SubscribeWorkflow;
+            gameObject.OnHide -= UnsubscribeWorkflow;
+
+            gameObject = null;
         }
     }
 }
