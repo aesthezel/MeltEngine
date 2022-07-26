@@ -3,11 +3,13 @@
     public class Scene
     {
         private static uint _id;
-        public uint ID { get; private set; }
+        public uint Id { get; private set; }
+        public string Name { get; private set; }
 
-        public Scene()
+        public Scene(string name)
         {
-            ID = _id++;
+            Id = _id++;
+            Name = name;
         }
     }
 }
