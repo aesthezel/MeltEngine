@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using MeltEngine.Entity.Component;
+using System.Linq;
+using MeltEngine.Entity.Components;
 
 namespace MeltEngine.Entity
 {
@@ -8,8 +9,8 @@ namespace MeltEngine.Entity
     {
         public string Name { get; set; }
         
-        public Action OnShow;
-        public Action OnHide;
+        public event Action OnShow;
+        public event Action OnHide;
         
         private bool _enabled;
         public bool Enabled
@@ -20,11 +21,11 @@ namespace MeltEngine.Entity
                 if (value)
                 {
                     OnShow?.Invoke();
-                } else
+                }
+                else
                 {
                     OnHide?.Invoke();
                 }
-
                 _enabled = value;
             }
         }
@@ -37,18 +38,28 @@ namespace MeltEngine.Entity
             Name = name;
             Enabled = enabled;
             
-            if(tags is not null) Tags.AddRange(tags);
-
-            var coord = new Coord();
-            AddBehaviour(coord);
+            if (tags is not null) Tags.AddRange(tags);
         }
 
         public void AddBehaviour(Behaviour behaviour)
         {
-            behaviour.SetGameObject(this);
             _behaviours.Add(behaviour);
+            behaviour.SetGameObject(this);
         }
 
-        public Behaviour GetBehaviour(Behaviour behaviour) => _behaviours?.Find(b => b == behaviour);
+        public T GetBehaviour<T>() where T : Behaviour
+        {
+            foreach (var behaviour in _behaviours)
+            {
+                Console.WriteLine($"{behaviour.GetType().Name} - Found!");
+            }
+            
+            return _behaviours.OfType<T>().FirstOrDefault();
+        }
+
+        public void Destroy()
+        {
+            foreach(var behaviour in _behaviours) behaviour.DestroyGameObject(this);
+        }
     }
 }

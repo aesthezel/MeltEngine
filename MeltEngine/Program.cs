@@ -1,5 +1,4 @@
-﻿using System;
-using MeltEngine.Core;
+﻿using MeltEngine.Core;
 
 namespace MeltEngine
 {
