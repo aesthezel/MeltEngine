@@ -1,43 +1,47 @@
 ﻿using System;
+using System.Numerics;
+using MeltEngine.Core.Scenes;
 using MeltEngine.Entity;
+using MeltEngine.Entity.Components;
+using MeltEngine.Entity.Components.Gameplay;
 using Raylib_CsLo;
 
 namespace MeltEngine.Core
 {
     public static class Workflow
     {
-        public static event Action OnInit;
-        public static event Action OnUpdate;
-        public static event Action OnRender;
-        public static event Action OnQuit;
+        public static Action OnInit;
+        public static Action OnUpdate;
+        public static Action OnRender;
+        public static Action OnEndRender;
+        public static Action OnQuit;
 
         public static void Run()
         {
-            // TODO: Scenes goes here!
-            GameObject goTest = new("Test", true);
+            GameObject cubeObject = new("Cube", true);
+            cubeObject.AddBehaviour(new Coord { Position = new Vector3(1, 1, 1), Size = new Vector3(1, 1, 1) });
+            cubeObject.AddBehaviour(new CubeRenderer());
+            cubeObject.AddBehaviour(new Movement());
+            
+            GameObject cameraObject = new("Camera", true);
+            GameCamera camera = new();
+            cameraObject.AddBehaviour(camera);
+            
+            camera.Follow(cubeObject);
+            
+            Scene mainScene = new("Main", cameraObject);
+            mainScene.AddGameObject(cubeObject);
+            
+            SceneService.AddScene(mainScene);
+            SceneService.LoadScene("Main");
 
             OnInit?.Invoke();
 
             while (!Raylib.WindowShouldClose())
             {
-                // Update
-                OnUpdate?.Invoke();
-
-                if(Raylib.IsKeyPressed(KeyboardKey.KEY_A))
-                {
-                    goTest.Enabled = !goTest.Enabled;
-                    Console.WriteLine($"{goTest.Name} has enabled? {goTest.Enabled}");
-                }
-
-                // Draw frame
-                Raylib.BeginDrawing();
-                Raylib.ClearBackground(Raylib.RAYWHITE); // TODO: Create a camera static component
-                OnRender?.Invoke();
-                Raylib.EndDrawing();
+                SceneService.GetActiveScene().Present();
             }
-            
-            OnQuit?.Invoke();
-            
+
             Raylib.CloseWindow();
         }
     }
