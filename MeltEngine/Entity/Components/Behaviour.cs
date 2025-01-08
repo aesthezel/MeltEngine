@@ -72,7 +72,7 @@ namespace MeltEngine.Entity.Components
             }
         }
 
-        public void DestroyGameObject(GameObject go)
+        public virtual void DestroyGameObject(GameObject go)
         {
             GameObject.Enabled = false;
 
