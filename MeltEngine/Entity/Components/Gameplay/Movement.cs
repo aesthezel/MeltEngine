@@ -1,39 +1,50 @@
 ﻿using System;
+using System.Numerics;
+using MeltEngine.Entity.Components.Physics;
 using Raylib_CsLo;
 
 namespace MeltEngine.Entity.Components.Gameplay;
 
-public class Movement : Behaviour
+public class Movement(float speed) : Behaviour
 {
-    private Coord _coord;
-    public float Speed { get; set; } = 5f;
+    private CubePhysics _physicBody;
+    public float Speed { get; set; } = speed;
 
     protected override void Start()
     {
-        // Obtener referencia al componente Coord
+        // Obtener referencia al componente CubePhysics
         Console.WriteLine($"{GetType().Name}: Start");
-        _coord = GameObject.GetBehaviour<Coord>();
+        _physicBody = GameObject.GetBehaviour<CubePhysics>();
     }
 
     protected override void Update()
     {
-        if (_coord == null)
+        if (_physicBody == null)
         {
-            Console.WriteLine("No coord defined");
+            Console.WriteLine("No physic body defined");
             return;
         }
 
-        // Leer input de Raylib y mover el cubo
+        // Variables para determinar las fuerzas a aplicar
+        Vector3 force = Vector3.Zero;
+
+        // Leer input de Raylib y mover el cubo aplicando fuerzas
         if (Raylib.IsKeyDown(KeyboardKey.KEY_W))
-            _coord.Position = _coord.Position with { Z = _coord.Position.Z + Speed * Raylib.GetFrameTime() };
+            force.Z += Speed;
 
         if (Raylib.IsKeyDown(KeyboardKey.KEY_S))
-            _coord.Position = _coord.Position with { Z = _coord.Position.Z - Speed * Raylib.GetFrameTime() };
+            force.Z -= Speed;
 
         if (Raylib.IsKeyDown(KeyboardKey.KEY_A))
-            _coord.Position = _coord.Position with { X = _coord.Position.X + Speed * Raylib.GetFrameTime() };
+            force.X += Speed;
 
         if (Raylib.IsKeyDown(KeyboardKey.KEY_D))
-            _coord.Position = _coord.Position with { X = _coord.Position.X - Speed * Raylib.GetFrameTime() };
+            force.X -= Speed;
+
+        if (Raylib.IsKeyDown(KeyboardKey.KEY_SPACE))
+            force.Y += Speed * 5;
+
+        // Aplicar la fuerza al cuerpo físico
+        _physicBody.ApplyForce(force * Raylib.GetFrameTime());
     }
 }

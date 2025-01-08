@@ -47,7 +47,7 @@ namespace MeltEngine.Core.Scenes
             if (MainCamera != null) Raylib.BeginMode3D(MainCamera.Camera);
             Workflow.OnRender?.Invoke();
             
-            Raylib.DrawGrid(20, 1);
+            Raylib.DrawGrid(50, 1);
             
             Workflow.OnEndRender?.Invoke();
             if (MainCamera != null) Raylib.EndMode3D();
