@@ -9,13 +9,13 @@ public class CubeRenderer : Behaviour
     private Coord _coord;
     private CubePhysics _cubePhysics;
     
-    protected override void Start()
+    public override void Start()
     {
         _coord = GameObject.GetBehaviour<Coord>();
         _cubePhysics = GameObject.GetBehaviour<CubePhysics>();
     }
 
-    protected override void Render()
+    public override void Render()
     {
         if (_coord == null) return;
         //Console.WriteLine($"{_coord.Position.X}, {_coord.Position.Y}, {_coord.Position.Z}");

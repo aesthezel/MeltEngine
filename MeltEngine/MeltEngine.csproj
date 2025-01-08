@@ -9,6 +9,7 @@
 
     <ItemGroup>
       <PackageReference Include="MagicPhysX" Version="1.0.0" />
+      <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.12.0" />
       <PackageReference Include="Raylib-CsLo" Version="4.2.0.9" />
     </ItemGroup>
 

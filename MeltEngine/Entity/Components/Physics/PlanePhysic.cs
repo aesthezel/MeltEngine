@@ -22,7 +22,7 @@ public unsafe class PlanePhysic : Behaviour
         this.position = position;
     }
     
-    protected override void Start()
+    public override void Start()
     {
         var boxGeo = PxBoxGeometry_new(width, 1, height);
         

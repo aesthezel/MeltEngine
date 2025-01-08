@@ -22,7 +22,7 @@ public class GameCamera : Behaviour
         };
     }
 
-    protected override void Update()
+    public override void Update()
     {
         if (Target == null) return;
         Camera = Camera with { position = Target.Position + Offset };
