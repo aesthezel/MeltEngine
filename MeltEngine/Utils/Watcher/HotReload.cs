@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Linq;
 using MeltEngine.Core;
 using MeltEngine.Core.Scenes;
+using MeltEngine.Entity;
 using MeltEngine.Entity.Components;
 using MeltEngine.Entity.Components.Gameplay;
 
@@ -27,12 +28,12 @@ public static class HotReload
             .Select(a => a.Location)
             .Where(location => !string.IsNullOrEmpty(location))
             .ToArray();
-        
+
         foreach (var reference in references)
         {
             if (!File.Exists(reference))
             {
-                Console.WriteLine($"Reference {reference} don't exist.");
+                Console.WriteLine($"[HotReload] Reference {reference} don't exist.");
             }
         }
 
@@ -48,63 +49,86 @@ public static class HotReload
         {
             ms.Seek(0, SeekOrigin.Begin);
             var assembly = Assembly.Load(ms.ToArray());
-            
+
             ReplaceAssembly(assembly);
         }
         else
         {
-            Console.WriteLine("Compilation failed.");
+            Console.WriteLine("[HotReload] Compilation failed.");
         }
     }
 
     private static void ReplaceAssembly(Assembly assembly)
     {
         _currentAssembly = assembly;
-        Console.WriteLine($"Loaded new assembly: {assembly.FullName}");
-    
+        Console.WriteLine($"[HotReload] Loaded new assembly: {assembly.FullName}");
+
+        var modifiedTypes = new List<Type>();
         LoadedTypes.Clear();
+
         foreach (var type in assembly.GetTypes())
         {
-            if (type.FullName != null)
+            if (type.FullName == null) continue;
+
+            LoadedTypes[type.FullName] = type;
+
+            var oldType = _currentAssembly?.GetType(type.FullName);
+            if (oldType != null && oldType.FullName == type.FullName) 
             {
-                Console.WriteLine($"Registering type: {type.FullName}");
-                LoadedTypes[type.FullName] = type;
+                // Si el tipo existe, lo agregamos a la lista de modificados
+                modifiedTypes.Add(type);
+                Console.WriteLine($"[HotReload] Type modified: {type.FullName}");
             }
         }
-    
-        ReloadBehavioursInActiveScene();
+
+        ReloadBehavioursInActiveScene(modifiedTypes);
     }
-    
-    private static void ReloadBehavioursInActiveScene()
+
+    private static void ReloadBehavioursInActiveScene(List<Type> modifiedTypes)
     {
         var scene = SceneService.GetActiveScene();
         if (scene == null) return;
 
+        Console.WriteLine("[HotReload] Reloading behaviours in active scene...");
+
         foreach (var gameObject in scene.GetGameObjects())
         {
-            var movement = gameObject.GetBehaviour<Movement>();
-            if (movement == null) continue;
-        
-            Console.WriteLine($"[HotReload] Removed movement from {gameObject.Name}");
-            gameObject.RemoveBehaviour(movement);
-            
-            var movementType = LoadedTypes.TryGetValue("MeltEngine.Entity.Components.Gameplay.Movement", out var type) ? type : null;
-
-            if (movementType != null)
+            foreach (var type in modifiedTypes)
             {
-                var constructor = movementType.GetConstructor(new[] { typeof(float) });
-                if (constructor != null)
+                Console.WriteLine($"[HotReload] Checking for {type.Name} in {gameObject.Name}...");
+
+                // Buscar comportamientos por nombre de tipo
+                var behaviours = gameObject.GetBehaviours();
+                var behaviour = behaviours.FirstOrDefault(b => b is Movement);
+
+                if (behaviour == null)
                 {
-                    var newMovement = (IComponent)constructor.Invoke([200f]);
-                    gameObject.AddBehaviour((Behaviour)newMovement);
+                    Console.WriteLine($"[HotReload] No {type.Name} found in {gameObject.Name}.");
+                    continue;
                 }
-                else
+
+                Console.WriteLine($"[HotReload] Found {type.Name} in {gameObject.Name}. Removing...");
+
+                gameObject.RemoveBehaviour(behaviour);
+
+                // Instanciar nuevo comportamiento del tipo actualizado
+                if (LoadedTypes.TryGetValue(type.FullName, out var newType))
                 {
-                    Console.WriteLine("[HotReload] Constructor not found for Movement.");
+                    var constructor = newType.GetConstructor(Type.EmptyTypes);
+                    if (constructor != null)
+                    {
+                        var newBehaviour = (Behaviour)constructor.Invoke(null);
+                        gameObject.AddBehaviour(newBehaviour);
+                        Console.WriteLine($"[HotReload] Added new {newType.Name} to {gameObject.Name}.");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[HotReload] Constructor not found for {type.Name}.");
+                    }
                 }
             }
         }
 
-        Workflow.OnInit?.Invoke(); // TODO: create a new method for Init and another for Start
+        Workflow.OnInit?.Invoke();
     }
 }

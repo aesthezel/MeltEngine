@@ -54,6 +54,11 @@ namespace MeltEngine.Entity
             return _behaviours.OfType<T>().FirstOrDefault();
         }
         
+        public IEnumerable<Behaviour> GetBehaviours()
+        {
+            return _behaviours;
+        }
+        
         public void RemoveBehaviour(Behaviour behaviour)
         {
             _behaviours.Remove(behaviour);
