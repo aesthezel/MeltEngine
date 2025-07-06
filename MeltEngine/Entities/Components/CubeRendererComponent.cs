@@ -1,6 +1,3 @@
 ﻿namespace MeltEngine.Entities.Components;
 
-public class CubeRendererComponent
-{
-    
-}
+public struct CubeRendererComponent { }

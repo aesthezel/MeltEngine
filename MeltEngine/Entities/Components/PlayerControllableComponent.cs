@@ -1,6 +1,6 @@
 ﻿namespace MeltEngine.Entities.Components;
 
-public class PlayerControllableComponent
+public struct PlayerControllableComponent
 {
-    
+    public float Speed;
 }

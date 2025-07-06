@@ -1,6 +1,8 @@
-﻿namespace MeltEngine.Entities.Components;
+﻿using MagicPhysX;
 
-public class StaticPhysicsBodyComponent
+namespace MeltEngine.Entities.Components;
+
+public unsafe struct StaticPhysicsBodyComponent
 {
-    
+    public PxRigidStatic* Actor;
 }

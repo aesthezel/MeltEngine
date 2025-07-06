@@ -1,6 +1,12 @@
-﻿namespace MeltEngine.Entities.Components;
+﻿using System.Numerics;
+using Raylib_CsLo;
 
-public class GameCameraComponent
+namespace MeltEngine.Entities.Components
 {
-    
+    public struct GameCameraComponent
+    {
+        public Camera3D Camera;
+        public Vector3 Offset;
+        public Entity TargetEntity;
+    }
 }

@@ -1,6 +1,3 @@
 ﻿namespace MeltEngine.Entities.Components;
 
-public class DestroyedComponent
-{
-    
-}
+public struct DestroyedComponent { }

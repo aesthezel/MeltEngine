@@ -1,6 +1,3 @@
 ﻿namespace MeltEngine.Scenes;
 
-public class SceneMemberComponent
-{
-    
-}
+public struct SceneMemberComponent { }
