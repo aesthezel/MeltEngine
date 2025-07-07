@@ -19,7 +19,7 @@ namespace MeltEngine.Core
             return _availableEntities.Count != 0 ? _availableEntities.Dequeue() : new Entity { Id = (uint)_nextEntityId++ };
         }
 
-        public void DestroyEntity(Entity entity)
+        public virtual void DestroyEntity(Entity entity)
         {
             foreach (var componentArray in _componentArrays.Values)
             {
@@ -29,7 +29,7 @@ namespace MeltEngine.Core
             _availableEntities.Enqueue(entity);
         }
         
-        public ComponentArray<T> GetComponentArray<T>() where T : struct
+        public virtual ComponentArray<T> GetComponentArray<T>() where T : struct
         {
             var type = typeof(T);
 
@@ -40,17 +40,17 @@ namespace MeltEngine.Core
             return (ComponentArray<T>)componentArray;
         }
 
-        public void AddComponent<T>(Entity entity, T component) where T : struct
+        public virtual void AddComponent<T>(Entity entity, T component) where T : struct
         {
             GetComponentArray<T>().AddComponent(entity, component);
         }
 
-        public void RemoveComponent<T>(Entity entity) where T : struct
+        public virtual void RemoveComponent<T>(Entity entity) where T : struct
         {
             GetComponentArray<T>().RemoveComponent(entity);
         }
 
-        public T GetComponent<T>(Entity entity) where T : struct
+        public virtual T GetComponent<T>(Entity entity) where T : struct
         {
             return GetComponentArray<T>().GetComponent(entity);
         }

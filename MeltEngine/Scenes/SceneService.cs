@@ -9,6 +9,7 @@ using MeltEngine.Core;
 using MeltEngine.Entities;
 using MeltEngine.Entities.Components;
 using MeltEngine.Utils.Serialization;
+using Raylib_cs;
 
 namespace MeltEngine.Scenes
 {
@@ -84,19 +85,18 @@ namespace MeltEngine.Scenes
                                 break;
                                 
                             case "GameCameraComponent":
-                                // NUEVO: Deserializar datos de cámara con nombre de target
                                 var cameraData = compJsonElement.Deserialize<GameCameraComponentData>(SceneSerializer.Options);
                                 
                                 var camera = new GameCameraComponent
                                 {
                                     Offset = cameraData.Offset,
-                                    Camera = new Raylib_CsLo.Camera3D
+                                    Camera = new Camera3D
                                     {
-                                        position = cameraData.Camera.Position,
-                                        target = cameraData.Camera.Target,
-                                        up = cameraData.Camera.Up,
-                                        fovy = cameraData.Camera.Fovy,
-                                        projection = cameraData.Camera.Projection
+                                        Position = cameraData.Camera.Position,
+                                        Target = cameraData.Camera.Target,
+                                        Up = cameraData.Camera.Up,
+                                        FovY = cameraData.Camera.Fovy,
+                                        Projection = (CameraProjection)cameraData.Camera.Projection
                                     }
                                 };
                                 
@@ -121,8 +121,8 @@ namespace MeltEngine.Scenes
                         entityOperator.AddComponent(cameraEntity, finalCamera);
                         Console.WriteLine($"✅ Cámara Entity {cameraEntity.Id} ahora sigue a '{targetName}' (Entity {targetEntity.Id})");
                         Console.WriteLine($"   Offset: {finalCamera.Offset}");
-                        Console.WriteLine($"   Initial Cam Pos: {finalCamera.Camera.position}");
-                        Console.WriteLine($"   Initial Cam Target: {finalCamera.Camera.target}");
+                        Console.WriteLine($"   Initial Cam Pos: {finalCamera.Camera.Position}");
+                        Console.WriteLine($"   Initial Cam Target: {finalCamera.Camera.Target}");
                     }
                     else
                     {
@@ -219,7 +219,7 @@ namespace MeltEngine.Scenes
                                     Target = new Vector3(0, 5, 0),
                                     Up = new Vector3(0.0f, 1.0f, 0.0f),
                                     Fovy = 45.0f,
-                                    Projection = (int)Raylib_CsLo.CameraProjection.CAMERA_PERSPECTIVE
+                                    Projection = (int)CameraProjection.Perspective
                                 }
                             })
                         }

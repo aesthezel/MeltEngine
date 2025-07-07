@@ -1,6 +1,4 @@
-﻿using System;
-using System.Numerics;
-using Raylib_CsLo;
+﻿using System.Numerics;
 
 namespace MeltEngine.Entities.Components
 {

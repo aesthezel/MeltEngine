@@ -38,8 +38,8 @@ namespace MeltEngine.Systems
                 var cameraPosition = targetCoord.Position + updatedCamera.Offset;
                 var targetPosition = targetCoord.Position;
                 
-                updatedCamera.Camera.position = cameraPosition;
-                updatedCamera.Camera.target = targetPosition;
+                updatedCamera.Camera.Position = cameraPosition;
+                updatedCamera.Camera.Target = targetPosition;
                 
                 cameraComponents.Components[cameraEntity] = updatedCamera;
             }

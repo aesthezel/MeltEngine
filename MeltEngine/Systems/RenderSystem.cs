@@ -1,9 +1,9 @@
 ﻿using System.Linq;
 using System.Numerics;
-using Raylib_CsLo;
 using MeltEngine.Core;
 using MeltEngine.Entities.Components;
 using MeltEngine.Systems.Interfaces;
+using Raylib_cs;
 
 namespace MeltEngine.Systems
 {
@@ -14,7 +14,7 @@ namespace MeltEngine.Systems
             var cameraComponents = entityOperator.GetComponentArray<GameCameraComponent>();
 
             Raylib.BeginDrawing();
-            Raylib.ClearBackground(Raylib.RAYWHITE);
+            Raylib.ClearBackground(Raylib.ColorAlpha(new Color(0, 0, 0), 1f));
 
             if (cameraComponents.Components.Count > 0)
             {
@@ -22,9 +22,9 @@ namespace MeltEngine.Systems
                 var cameraComponent = cameraComponents.Components[cameraEntity];
                 var mainCamera = cameraComponent.Camera;
                 
-                Raylib.DrawText($"Cam Pos: {mainCamera.position:F1}", 10, 50, 20, Raylib.BLACK);
-                Raylib.DrawText($"Cam Target: {mainCamera.target:F1}", 10, 75, 20, Raylib.BLACK);
-                Raylib.DrawText($"Target Entity: {cameraComponent.TargetEntity.Id}", 10, 100, 20, Raylib.BLACK);
+                Raylib.DrawText($"Cam Pos: {mainCamera.Position:F1}", 10, 50, 20, Raylib.ColorAlpha(new Color(255, 255, 255), 1f));
+                Raylib.DrawText($"Cam Target: {mainCamera.Target:F1}", 10, 75, 20, Raylib.ColorAlpha(new Color(255, 255, 255), 1f));
+                Raylib.DrawText($"Target Entity: {cameraComponent.TargetEntity.Id}", 10, 100, 20, Raylib.ColorAlpha(new Color(255, 255, 255), 1f));
             
                 Raylib.BeginMode3D(mainCamera);
 
@@ -39,9 +39,9 @@ namespace MeltEngine.Systems
                         !coordComponents.Components.TryGetValue(entity, out var cubeCoord)) continue;
 
                     var renderPosition = physicsComponents.Components.ContainsKey(entity) ? Vector3.Lerp(cubeCoord.PreviousPosition, cubeCoord.Position, alpha) : cubeCoord.Position;
-                    Raylib.DrawText($"Player Pos: {renderPosition:F1}", 10, 200, 20, Raylib.BLACK);
+                    Raylib.DrawText($"Player Pos: {renderPosition:F1}", 10, 200, 20, Raylib.ColorAlpha(new Color(255, 255, 255), 1f));
                     
-                    var color = physicsComponents.Components.ContainsKey(entity) ? Raylib.RED : Raylib.BLUE;
+                    var color = physicsComponents.Components.ContainsKey(entity) ? Raylib.ColorAlpha(new Color(255, 0, 0), 1f) : Raylib.ColorAlpha(new Color(0, 0, 255), 1f);
                     Raylib.DrawCube(renderPosition, cubeCoord.Scale.X, cubeCoord.Scale.Y, cubeCoord.Scale.Z, color);
                 }
             
@@ -50,7 +50,7 @@ namespace MeltEngine.Systems
             }
             else
             {
-                Raylib.DrawText("No active camera", 10, 30, 20, Raylib.DARKGRAY);
+                Raylib.DrawText("No active camera", 10, 30, 20, Raylib.ColorAlpha(new Color(255, 255, 255), 1f));
             }
             
             Raylib.DrawFPS(10, 10);
