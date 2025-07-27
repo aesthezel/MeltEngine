@@ -1,50 +1,46 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Numerics;
+using System.Linq;
 using MeltEngine.Entities;
-using MeltEngine.Entities.Components;
-using Raylib_CsLo;
+// using MeltEngine.Entities.Components; // GameCameraComponent might be used later
+// using Raylib_CsLo; // Not used directly in Scene management logic for now
 
 namespace MeltEngine.Core.Scenes
 {
     public class Scene
     {
-        // private static uint _id;
-        // public uint Id { get; private set; }
-        // public string Name { get; private set; }
-        // public GameCamera MainCamera { get; private set; }
-        //
-        // private readonly Dictionary<Guid, GameObject> _gameObjectsById = new();
-        //
-        // public Scene(string name, GameObject cameraGameObject = null)
-        // {
-        //     Id = _id++;
-        //     Name = name;
-        //
-        //     // Config main camera
-        //     AddGameObject(cameraGameObject);
-        //     var camera = cameraGameObject.GetBehaviour<GameCamera>();
-        //     if(camera != null) MainCamera = camera;
-        // }
-        //
-        // public void AddGameObject(GameObject gameObject)
-        // {
-        //     _gameObjectsById[gameObject.Id] = gameObject;
-        // }
-        //
-        // public void RemoveGameObject(GameObject gameObject)
-        // {
-        //     _gameObjectsById.Remove(gameObject.Id);
-        //     gameObject.Destroy();
-        // }
-        //
-        // public IEnumerable<GameObject> GetGameObjects() => _gameObjectsById.Values;
-        //
-        // public GameObject GetGameObjectById(Guid id)
-        // {
-        //     return _gameObjectsById.GetValueOrDefault(id);
-        // }
-        //
+        private static uint _nextId;
+        public uint Id { get; private set; }
+        public string Name { get; private set; }
+
+        // public GameCamera MainCamera { get; private set; } // To be handled by ECS Entity + GameCameraComponent
+
+        private readonly List<Entity> _entities = new();
+
+        public Scene(string name)
+        {
+            Id = _nextId++;
+            Name = name;
+        }
+
+        public void AddEntity(Entity entity)
+        {
+            if (entity != null && !_entities.Contains(entity))
+            {
+                _entities.Add(entity);
+            }
+        }
+
+        public void RemoveEntity(Entity entity, ECSOperator ecsOperator)
+        {
+            if (entity != null && _entities.Remove(entity))
+            {
+                ecsOperator.DestroyEntity(entity);
+            }
+        }
+
+        public IEnumerable<Entity> GetEntities() => _entities.AsReadOnly();
+
         // public void Present()
         // {
         //     Workflow.OnUpdate?.Invoke();
@@ -52,17 +48,15 @@ namespace MeltEngine.Core.Scenes
         //     Raylib.BeginDrawing();
         //     Raylib.ClearBackground(Raylib.RAYWHITE);
         //        
-        //     if (MainCamera != null) Raylib.BeginMode3D(MainCamera.Camera);
+        //     // if (MainCamera != null) Raylib.BeginMode3D(MainCamera.Camera);
         //     Workflow.OnRender?.Invoke();
         //     
         //     Raylib.DrawGrid(50, 1);
         //     
         //     Workflow.OnEndRender?.Invoke();
-        //     if (MainCamera != null) Raylib.EndMode3D();
+        //     // if (MainCamera != null) Raylib.EndMode3D();
         //         
         //     Raylib.EndDrawing();
-        //     
-        //
         // }
     }
 }

@@ -1,0 +1,56 @@
+{
+  "name": "Scene 1",
+  "description": "A test scene loaded from JSON.",
+  "entities": [
+    {
+      "name": "Ground",
+      "type": "StaticObject",
+      "components": {
+        "CoordComponent": {
+          "position": { "x": 0, "y": 0, "z": 0 },
+          "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 },
+          "scale": { "x": 50, "y": 1, "z": 50 }
+        },
+        "EnabledComponent": {},
+        "StaticPhysicsBodyComponent": {}
+      }
+    },
+    {
+      "name": "Player",
+      "type": "Player",
+      "components": {
+        "CoordComponent": {
+          "position": { "x": 0, "y": 3, "z": 0 },
+          "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 },
+          "scale": { "x": 1, "y": 1, "z": 1 }
+        },
+        "CubeRendererComponent": {},
+        "PlayerControllableComponent": { "speed": 50.0 },
+        "EnabledComponent": {}
+      }
+    },
+    {
+      "name": "MainCamera",
+      "type": "Camera",
+      "components": {
+        "CoordComponent": {
+          "position": { "x": 0, "y": 8, "z": -15 },
+          "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 },
+          "scale": { "x": 1, "y": 1, "z": 1 }
+        },
+        "GameCameraComponent": {
+          "targetEntityName": "Player",
+          "offset": { "x": -2, "y": 10, "z": -20 },
+          "camera": {
+            "position": { "x": 0, "y": 8, "z": -15 },
+            "target": { "x": 0, "y": 2, "z": 0 },
+            "up": { "x": 0, "y": 1, "z": 0 },
+            "fovy": 45.0,
+            "projection": 0
+          }
+        },
+        "EnabledComponent": {}
+      }
+    }
+  ]
+}
