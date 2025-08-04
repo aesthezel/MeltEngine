@@ -1,12 +1,27 @@
-﻿using MeltEngine.Core;
+﻿using System;
+using System.Threading.Tasks;
+using MeltEngine.Core;
 
-namespace MeltEngine
+namespace MeltEngine;
+
+public class Program
 {
-    class Program
+    private static async Task Main()
     {
-        static void Main()
-        {
-            Window.Init(1920, 1080);
-        }
+        AppDomain.CurrentDomain.UnhandledException += GlobalExceptionHandler;
+        await Window.Init(1920, 1080, frameRate: 120);
+    }
+
+    static void GlobalExceptionHandler(object sender, UnhandledExceptionEventArgs args)
+    {
+        Exception e = (Exception)args.ExceptionObject;
+        Console.WriteLine("!!!!!!!!!! SE HA PRODUCIDO UNA EXCEPCIÓN GLOBAL NO CONTROLADA !!!!!!!!!!");
+        Console.WriteLine("La aplicación se cerrará.");
+        Console.WriteLine("Detalles del error:");
+        Console.WriteLine(e.ToString());
+            
+        Console.WriteLine("\nPresiona Enter para cerrar...");
+        Console.ReadLine();
+        Environment.Exit(1);
     }
 }
