@@ -10,12 +10,12 @@ namespace MeltEngine.Entity.Components
         public Vector4 Rotation { get; set; } 
         public Vector3 Size { get; set; }
 
-        protected override void Update()
+        public override void Update()
         {
             //Console.WriteLine($"{GameObject.Name}: {Rotation}");
         }
         
-        protected override void Render()
+        public override void Render()
         {
             Raylib.DrawSphere(Position, 0.1f, Raylib.RED);
         }

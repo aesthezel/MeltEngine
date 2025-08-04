@@ -7,6 +7,7 @@ namespace MeltEngine.Entity
 {
     public class GameObject
     {
+        public Guid Id { get; private set; }
         public string Name { get; set; }
         
         public event Action OnShow;
@@ -35,6 +36,7 @@ namespace MeltEngine.Entity
 
         public GameObject(string name, bool enabled, string[] tags = null)
         {
+            Id = Guid.NewGuid();
             Name = name;
             Enabled = enabled;
             
@@ -49,12 +51,17 @@ namespace MeltEngine.Entity
 
         public T GetBehaviour<T>() where T : Behaviour
         {
-            foreach (var behaviour in _behaviours)
-            {
-                Console.WriteLine($"{behaviour.GetType().Name} - Found!");
-            }
-            
             return _behaviours.OfType<T>().FirstOrDefault();
+        }
+        
+        public IEnumerable<Behaviour> GetBehaviours()
+        {
+            return _behaviours;
+        }
+        
+        public void RemoveBehaviour(Behaviour behaviour)
+        {
+            _behaviours.Remove(behaviour);
         }
 
         public void Destroy()

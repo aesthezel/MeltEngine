@@ -26,7 +26,7 @@ public unsafe class CubePhysics : Behaviour
         this.mass = mass;
     }
     
-    protected override void Start()
+    public override void Start()
     {
         _coord = GameObject.GetBehaviour<Coord>();
         var boxGeo = PxBoxGeometry_new(size, size, size);
@@ -47,7 +47,7 @@ public unsafe class CubePhysics : Behaviour
         PxRigidDynamic_setLinearVelocity_mut(cubeActor, &pxForce, true);
     }
     
-    protected override void Update()
+    public override void Update()
     {
         if (cubeActor == null) return;
         var pose = PxRigidActor_getGlobalPose((PxRigidActor*)cubeActor);

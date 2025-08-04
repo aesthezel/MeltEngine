@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Numerics;
 using MeltEngine.Entity;
 using MeltEngine.Entity.Components;
@@ -13,7 +14,7 @@ namespace MeltEngine.Core.Scenes
         public string Name { get; private set; }
         public GameCamera MainCamera { get; private set; }
         
-        private readonly List<GameObject> _gameObjects = new();
+        private readonly Dictionary<Guid, GameObject> _gameObjectsById = new();
 
         public Scene(string name, GameObject cameraGameObject = null)
         {
@@ -28,13 +29,20 @@ namespace MeltEngine.Core.Scenes
         
         public void AddGameObject(GameObject gameObject)
         {
-            _gameObjects.Add(gameObject);
+            _gameObjectsById[gameObject.Id] = gameObject;
         }
 
         public void RemoveGameObject(GameObject gameObject)
         {
-            _gameObjects.Remove(gameObject);
+            _gameObjectsById.Remove(gameObject.Id);
             gameObject.Destroy();
+        }
+        
+        public IEnumerable<GameObject> GetGameObjects() => _gameObjectsById.Values;
+        
+        public GameObject GetGameObjectById(Guid id)
+        {
+            return _gameObjectsById.GetValueOrDefault(id);
         }
 
         public void Present()

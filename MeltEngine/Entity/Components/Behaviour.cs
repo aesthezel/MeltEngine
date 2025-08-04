@@ -3,7 +3,7 @@ using MeltEngine.Core;
 
 namespace MeltEngine.Entity.Components
 {
-    public abstract class Behaviour
+    public abstract class Behaviour : IComponent
     {
         public GameObject GameObject { get; private set; }
         
@@ -27,12 +27,12 @@ namespace MeltEngine.Entity.Components
         }
 
         // Métodos virtuales
-        protected virtual void Start() { }
-        protected virtual void Update() { }
-        protected virtual void Render() { }
-        protected virtual void EndRender() { }
-        protected virtual void Show() { }
-        protected virtual void Hide() { }
+        public virtual void Start() { }
+        public virtual void Update() { }
+        public virtual void Render() { }
+        public virtual void EndRender() { }
+        public virtual void Show() { }
+        public virtual void Hide() { }
 
         private void SubscribeWorkflow()
         {

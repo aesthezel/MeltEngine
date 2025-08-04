@@ -5,30 +5,37 @@ using Raylib_CsLo;
 
 namespace MeltEngine.Entity.Components.Gameplay;
 
-public class Movement(float speed) : Behaviour
+public class Movement : Behaviour
 {
     private CubePhysics _physicBody;
-    public float Speed { get; set; } = speed;
+    public float Speed { get; set; }
 
-    protected override void Start()
+    public Movement()
     {
-        // Obtener referencia al componente CubePhysics
+        Speed = 100f;
+    }
+
+    public Movement(float speed)
+    {
+        Speed = speed;
+    }
+    
+    public override void Start()
+    {
         Console.WriteLine($"{GetType().Name}: Start");
         _physicBody = GameObject.GetBehaviour<CubePhysics>();
     }
 
-    protected override void Update()
+    public override void Update()
     {
         if (_physicBody == null)
         {
             Console.WriteLine("No physic body defined");
             return;
         }
-
-        // Variables para determinar las fuerzas a aplicar
+        
         Vector3 force = Vector3.Zero;
 
-        // Leer input de Raylib y mover el cubo aplicando fuerzas
         if (Raylib.IsKeyDown(KeyboardKey.KEY_W))
             force.Z += Speed;
 
@@ -41,10 +48,9 @@ public class Movement(float speed) : Behaviour
         if (Raylib.IsKeyDown(KeyboardKey.KEY_D))
             force.X -= Speed;
 
-        if (Raylib.IsKeyDown(KeyboardKey.KEY_SPACE))
-            force.Y += Speed * 5;
-
-        // Aplicar la fuerza al cuerpo físico
+        // if (Raylib.IsKeyDown(KeyboardKey.KEY_SPACE))
+        //     force.Y += Speed * 5;
+        
         _physicBody.ApplyForce(force * Raylib.GetFrameTime());
     }
 }

@@ -6,7 +6,7 @@ namespace MeltEngine
     {
         static void Main()
         {
-            Window.Init(1280, 720);
+            Window.Init(1920, 1080);
         }
     }
 }
