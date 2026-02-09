@@ -15,19 +15,22 @@ namespace MeltEngine.Scenes
 {
     public class SceneService
     {
+        private string _currentScenePath = "";
+        private string _currentSceneName = "";
+
         public async Task LoadScene(string scenePath, ECSOperator entityOperator)
         {
             try
             {
                 var fullPath = Path.Combine(Directory.GetCurrentDirectory(), scenePath);
-                
+
                 if (!File.Exists(fullPath))
                 {
                     Console.WriteLine($"ADVERTENCIA: No se encontró el archivo de escena: {fullPath}");
                     Console.WriteLine("Creando escena de ejemplo...");
                     CreateExampleScene(fullPath);
                 }
-                
+
                 var scene = SceneSerializer.LoadScene(fullPath);
                 if (scene is null)
                 {
@@ -36,81 +39,31 @@ namespace MeltEngine.Scenes
 
                 Console.WriteLine($"Cargando escena: {scene.Name}");
                 ClearScene(entityOperator);
-                
-                // NUEVO: Mapeo de nombres a entidades
+
+                _currentScenePath = fullPath;
+                _currentSceneName = scene.Name;
+
+                // Mapeo de nombres a entidades
                 var entityNameMap = new Dictionary<string, Entity>();
-                var cameraTargetRequests = new List<(Entity cameraEntity, string targetName, GameCameraComponent camera)>();
-                
+                var cameraTargetRequests =
+                    new List<(Entity cameraEntity, string targetName, GameCameraComponent camera)>();
+
                 // PRIMERA PASADA: Crear todas las entidades y mapear nombres
                 foreach (var entityDef in scene.Entities)
                 {
                     var entity = entityOperator.CreateEntity();
-                    entityOperator.AddComponent(entity, new SceneMemberComponent());
-                    
+                    entityOperator.AddComponent(entity, new SceneMemberComponent(scene.Name));
+
                     entityNameMap[entityDef.Name] = entity;
                     Console.WriteLine($"Creando entidad: {entityDef.Name} → Entity {entity.Id}");
 
                     foreach (var (compTypeName, compJsonElement) in entityDef.Components)
                     {
-                        switch (compTypeName)
-                        {
-                            case "CoordComponent":
-                                var coord = compJsonElement.Deserialize<CoordComponent>(SceneSerializer.Options);
-                                entityOperator.AddComponent(entity, coord);
-                                break;
-                            
-                            case "EnabledComponent":
-                                var enabled = compJsonElement.Deserialize<EnabledComponent>(SceneSerializer.Options);
-                                entityOperator.AddComponent(entity, enabled);
-                                break;
-
-                            case "CubeRendererComponent":
-                                var cube = compJsonElement.Deserialize<CubeRendererComponent>(SceneSerializer.Options);
-                                entityOperator.AddComponent(entity, cube);
-                                break;
-
-                            case "PlayerControllableComponent":
-                                var controllable = compJsonElement.Deserialize<PlayerControllableComponent>(SceneSerializer.Options);
-                                entityOperator.AddComponent(entity, controllable);
-                                break;
-                                
-                            case "StaticPhysicsBodyComponent":
-                                var staticBody = compJsonElement.Deserialize<StaticPhysicsBodyComponent>(SceneSerializer.Options);
-                                entityOperator.AddComponent(entity, staticBody);
-                                break;
-                                
-                            case "PhysicsBodyComponent":
-                                var physicsBody = compJsonElement.Deserialize<PhysicsBodyComponent>(SceneSerializer.Options);
-                                entityOperator.AddComponent(entity, physicsBody);
-                                break;
-                                
-                            case "GameCameraComponent":
-                                var cameraData = compJsonElement.Deserialize<GameCameraComponentData>(SceneSerializer.Options);
-                                
-                                var camera = new GameCameraComponent
-                                {
-                                    Offset = cameraData.Offset,
-                                    Camera = new Camera3D
-                                    {
-                                        Position = cameraData.Camera.Position,
-                                        Target = cameraData.Camera.Target,
-                                        Up = cameraData.Camera.Up,
-                                        FovY = cameraData.Camera.Fovy,
-                                        Projection = (CameraProjection)cameraData.Camera.Projection
-                                    }
-                                };
-                                
-                                cameraTargetRequests.Add((entity, cameraData.TargetEntityName, camera));
-                                Console.WriteLine($"Cámara '{entityDef.Name}' solicita seguir a '{cameraData.TargetEntityName}'");
-                                break;
-                            
-                            default:
-                                Console.WriteLine($"ADVERTENCIA: Componente '{compTypeName}' no manejado. Saltando.");
-                                break;
-                        }
+                        await AddComponentToEntity(entity, compTypeName, compJsonElement, entityOperator,
+                            cameraTargetRequests, entityDef.Name);
                     }
                 }
-                
+
                 // SEGUNDA PASADA: Resolver referencias de cámaras
                 foreach (var (cameraEntity, targetName, camera) in cameraTargetRequests)
                 {
@@ -119,10 +72,8 @@ namespace MeltEngine.Scenes
                         var finalCamera = camera;
                         finalCamera.TargetEntity = targetEntity;
                         entityOperator.AddComponent(cameraEntity, finalCamera);
-                        Console.WriteLine($"✅ Cámara Entity {cameraEntity.Id} ahora sigue a '{targetName}' (Entity {targetEntity.Id})");
-                        Console.WriteLine($"   Offset: {finalCamera.Offset}");
-                        Console.WriteLine($"   Initial Cam Pos: {finalCamera.Camera.Position}");
-                        Console.WriteLine($"   Initial Cam Target: {finalCamera.Camera.Target}");
+                        Console.WriteLine(
+                            $"✅ Cámara Entity {cameraEntity.Id} ahora sigue a '{targetName}' (Entity {targetEntity.Id})");
                     }
                     else
                     {
@@ -131,7 +82,6 @@ namespace MeltEngine.Scenes
                     }
                 }
 
-                
                 Console.WriteLine("Escena cargada exitosamente.");
             }
             catch (Exception ex)
@@ -141,7 +91,79 @@ namespace MeltEngine.Scenes
                 throw;
             }
         }
-        
+
+
+        private async Task AddComponentToEntity(Entity entity, string compTypeName, JsonElement compJsonElement,
+            ECSOperator entityOperator, List<(Entity, string, GameCameraComponent)> cameraTargetRequests,
+            string entityName)
+        {
+            switch (compTypeName)
+            {
+                case "CoordComponent":
+                    var coord = compJsonElement.Deserialize<CoordComponent>(SceneSerializer.Options);
+                    entityOperator.AddComponent(entity, coord);
+                    Console.WriteLine($"  → CoordComponent: Pos={coord.Position}, Scale={coord.Scale}");
+                    break;
+
+                case "EnabledComponent":
+                    var enabled = compJsonElement.Deserialize<EnabledComponent>(SceneSerializer.Options);
+                    entityOperator.AddComponent(entity, enabled);
+                    Console.WriteLine($"  → EnabledComponent agregado");
+                    break;
+
+                case "CubeRendererComponent":
+                    var cube = compJsonElement.Deserialize<CubeRendererComponent>(SceneSerializer.Options);
+                    entityOperator.AddComponent(entity, cube);
+                    Console.WriteLine($"  → CubeRendererComponent agregado");
+                    break;
+
+                case "PlayerControllableComponent":
+                    var controllable =
+                        compJsonElement.Deserialize<PlayerControllableComponent>(SceneSerializer.Options);
+                    entityOperator.AddComponent(entity, controllable);
+                    Console.WriteLine($"  → PlayerControllableComponent: Speed={controllable.Speed}");
+                    break;
+
+                case "StaticPhysicsBodyComponent":
+                    var staticBody = compJsonElement.Deserialize<StaticPhysicsBodyComponent>(SceneSerializer.Options);
+                    entityOperator.AddComponent(entity, staticBody);
+                    Console.WriteLine($"  → StaticPhysicsBodyComponent agregado");
+                    break;
+
+                case "PhysicsBodyComponent":
+                    var physicsBody = compJsonElement.Deserialize<PhysicsBodyComponent>(SceneSerializer.Options);
+                    entityOperator.AddComponent(entity, physicsBody);
+                    Console.WriteLine($"  → PhysicsBodyComponent: Mass={physicsBody.Mass}");
+                    break;
+
+                case "GameCameraComponent":
+                    var cameraData = compJsonElement.Deserialize<GameCameraComponentData>(SceneSerializer.Options);
+
+                    var camera = new GameCameraComponent
+                    {
+                        Offset = cameraData.Offset,
+                        Camera = new Camera3D
+                        {
+                            Position = cameraData.Camera.Position,
+                            Target = cameraData.Camera.Target,
+                            Up = cameraData.Camera.Up,
+                            FovY = cameraData.Camera.Fovy,
+                            Projection = (CameraProjection)cameraData.Camera.Projection
+                        }
+                    };
+
+                    cameraTargetRequests.Add((entity, cameraData.TargetEntityName, camera));
+                    Console.WriteLine(
+                        $"  → GameCameraComponent: Target='{cameraData.TargetEntityName}', Offset={cameraData.Offset}");
+                    Console.WriteLine($"    Pos={cameraData.Camera.Position}, Target={cameraData.Camera.Target}");
+                    break;
+
+                default:
+                    Console.WriteLine($"  ⚠️ ADVERTENCIA: Componente '{compTypeName}' no manejado. Saltando.");
+                    break;
+            }
+        }
+
         public static void ClearScene(ECSOperator entityOperator)
         {
             var sceneMembers = entityOperator.GetComponentArray<SceneMemberComponent>();
@@ -156,7 +178,10 @@ namespace MeltEngine.Scenes
                 }
             }
         }
-        
+
+        public string GetCurrentSceneName() => _currentSceneName;
+        public string GetCurrentScenePath() => _currentScenePath;
+
         private void CreateExampleScene(string path)
         {
             // Crear directorio si no existe
@@ -168,43 +193,50 @@ namespace MeltEngine.Scenes
 
             var exampleScene = new Scene
             {
-                Name = "Escena de Ejemplo v4.0",
-                Description = "Una escena básica con un jugador, suelo, cámara que sigue al jugador y algunos objetos",
+                Name = "Escena de Ejemplo Configurable v2",
+                Description = "Una escena básica configurable externamente con suelo sólido",
                 Entities = new List<EntityDefinition>
                 {
+                    // ⭐ SUELO CON RENDERING VISIBLE
                     new EntityDefinition("Ground", "StaticObject")
                     {
                         Components = new Dictionary<string, JsonElement>
                         {
-                            ["CoordComponent"] = JsonSerializer.SerializeToElement(new CoordComponent 
-                            { 
-                                Position = new Vector3(0, 5, 0),
-                                Scale = new Vector3(1, 1, 1) 
+                            ["CoordComponent"] = JsonSerializer.SerializeToElement(new CoordComponent
+                            {
+                                Position = new Vector3(0, -0.5f, 0),
+                                Scale = new Vector3(50, 1, 50)
                             }),
+                            ["CubeRendererComponent"] =
+                                JsonSerializer.SerializeToElement(
+                                    new CubeRendererComponent()), // ⭐ IMPORTANTE: Para que sea visible
                             ["EnabledComponent"] = JsonSerializer.SerializeToElement(new EnabledComponent()),
-                            ["StaticPhysicsBodyComponent"] = JsonSerializer.SerializeToElement(new StaticPhysicsBodyComponent())
+                            ["StaticPhysicsBodyComponent"] =
+                                JsonSerializer.SerializeToElement(new StaticPhysicsBodyComponent())
                         }
                     },
 
-            
-                    // Jugador - Posición inicial más alta
+                    // ⭐ JUGADOR EN POSICIÓN SEGURA SOBRE EL SUELO
                     new EntityDefinition("Player", "Player")
                     {
                         Components = new Dictionary<string, JsonElement>
                         {
-                            ["CoordComponent"] = JsonSerializer.SerializeToElement(new CoordComponent 
-                            { 
-                                Position = new Vector3(0, 5, 0), // ← CAMBIO: Más alto (5 en lugar de 2)
-                                Scale = new Vector3(1, 1, 1) 
+                            ["CoordComponent"] = JsonSerializer.SerializeToElement(new CoordComponent
+                            {
+                                Position = new Vector3(0, 2f, 0), // ⭐ Más cerca del suelo
+                                Scale = new Vector3(1, 1, 1)
                             }),
                             ["CubeRendererComponent"] = JsonSerializer.SerializeToElement(new CubeRendererComponent()),
-                            ["PlayerControllableComponent"] = JsonSerializer.SerializeToElement(new PlayerControllableComponent { Speed = 10f }), // ← CAMBIO: Velocidad más baja
+                            ["PlayerControllableComponent"] =
+                                JsonSerializer.SerializeToElement(new PlayerControllableComponent
+                                    { Speed = 5f }), // ⭐ Velocidad más conservadora
                             ["EnabledComponent"] = JsonSerializer.SerializeToElement(new EnabledComponent()),
-                            ["PhysicsBodyComponent"] = JsonSerializer.SerializeToElement(new PhysicsBodyComponent { Mass = 1f })
+                            ["PhysicsBodyComponent"] =
+                                JsonSerializer.SerializeToElement(new PhysicsBodyComponent { Mass = 1f })
                         }
                     },
-            
-                    // ⭐ CÁMARA CON OFFSET EXPLÍCITO
+
+                    // ⭐ CÁMARA CON CONFIGURACIÓN MEJORADA
                     new EntityDefinition("MainCamera", "Camera")
                     {
                         Components = new Dictionary<string, JsonElement>
@@ -212,11 +244,12 @@ namespace MeltEngine.Scenes
                             ["GameCameraComponent"] = JsonSerializer.SerializeToElement(new GameCameraComponentData
                             {
                                 TargetEntityName = "Player",
-                                Offset = new Vector3(0, 8, -15), // ← OFFSET EXPLÍCITO PARA TERCERA PERSONA
+                                Offset = new Vector3(0, 5, -10), // ⭐ Offset más conservador
                                 Camera = new CameraData
                                 {
-                                    Position = new Vector3(0, 8, -15),
-                                    Target = new Vector3(0, 5, 0),
+                                    Position = new Vector3(0, 7,
+                                        -10), // ⭐ Posición inicial calculada: Player(0,2,0) + Offset(0,5,-10)
+                                    Target = new Vector3(0, 2, 0), // ⭐ Apunta al jugador inicialmente
                                     Up = new Vector3(0.0f, 1.0f, 0.0f),
                                     Fovy = 45.0f,
                                     Projection = (int)CameraProjection.Perspective
@@ -224,30 +257,30 @@ namespace MeltEngine.Scenes
                             })
                         }
                     },
-            
-                    // Cubos decorativos - Más altos también
-                    new EntityDefinition("Cube1", "StaticObject")
+
+                    // Objetos de prueba
+                    new EntityDefinition("TestCube1", "StaticObject")
                     {
                         Components = new Dictionary<string, JsonElement>
                         {
-                            ["CoordComponent"] = JsonSerializer.SerializeToElement(new CoordComponent 
-                            { 
-                                Position = new Vector3(5f, 1f, 0f), // ← CAMBIO: Más alto y alejado
-                                Scale = new Vector3(1, 1, 1) 
+                            ["CoordComponent"] = JsonSerializer.SerializeToElement(new CoordComponent
+                            {
+                                Position = new Vector3(5f, 1f, 0f),
+                                Scale = new Vector3(1, 1, 1)
                             }),
                             ["CubeRendererComponent"] = JsonSerializer.SerializeToElement(new CubeRendererComponent()),
                             ["EnabledComponent"] = JsonSerializer.SerializeToElement(new EnabledComponent())
                         }
                     },
-            
-                    new EntityDefinition("Cube2", "StaticObject")
+
+                    new EntityDefinition("TestCube2", "StaticObject")
                     {
                         Components = new Dictionary<string, JsonElement>
                         {
-                            ["CoordComponent"] = JsonSerializer.SerializeToElement(new CoordComponent 
-                            { 
-                                Position = new Vector3(-5f, 1f, 0f), // ← CAMBIO: Más alto y alejado
-                                Scale = new Vector3(1, 1, 1) 
+                            ["CoordComponent"] = JsonSerializer.SerializeToElement(new CoordComponent
+                            {
+                                Position = new Vector3(-5f, 1f, 0f),
+                                Scale = new Vector3(1, 1, 1)
                             }),
                             ["CubeRendererComponent"] = JsonSerializer.SerializeToElement(new CubeRendererComponent()),
                             ["EnabledComponent"] = JsonSerializer.SerializeToElement(new EnabledComponent())
@@ -255,9 +288,9 @@ namespace MeltEngine.Scenes
                     }
                 }
             };
-    
+
             SceneSerializer.SaveScene(exampleScene, path);
-            Console.WriteLine($"Escena de ejemplo v4.0 creada en: {path}");
+            Console.WriteLine($"Escena de ejemplo v2 creada en: {path}");
         }
     }
 }
