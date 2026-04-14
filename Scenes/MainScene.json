@@ -1,0 +1,111 @@
+{
+  "Name": "Escena de Ejemplo Configurable v2",
+  "Description": "Una escena básica configurable externamente con suelo sólido",
+  "Entities": [
+    {
+      "Name": "Ground",
+      "Type": "StaticObject",
+      "Components": {
+        "CoordComponent": {
+          "Position": {
+            "X": 0,
+            "Y": -0.5,
+            "Z": 0
+          },
+          "PreviousPosition": {
+            "X": 0,
+            "Y": -0.5,
+            "Z": 0
+          },
+          "Rotation": {
+            "IsIdentity": false
+          },
+          "Scale": {
+            "X": 700,
+            "Y": 1,
+            "Z": 700
+          }
+        },
+        "CubeRendererComponent": {},
+        "EnabledComponent": {},
+        "StaticPhysicsBodyComponent": {}
+      }
+    },
+    {
+      "Name": "Player",
+      "Type": "Player",
+      "Components": {
+        "CoordComponent": {
+          "Position": {
+            "X": 0,
+            "Y": 2,
+            "Z": 0
+          },
+          "PreviousPosition": {
+            "X": 0,
+            "Y": 2,
+            "Z": 0
+          },
+          "Rotation": {
+            "IsIdentity": false
+          },
+          "Scale": {
+            "X": 1,
+            "Y": 1,
+            "Z": 1
+          }
+        },
+        "CubeRendererComponent": {},
+        "PlayerControllableComponent": {
+          "Speed": 50.0,
+          "IsGodMode": true
+        },
+        "CubeSpawnerComponent": {
+          "Cooldown": 0.2,
+          "CurrentCooldown": 0.0
+        },
+        "EnabledComponent": {},
+        "PhysicsBodyComponent": {
+          "Mass": 1
+        }
+      }
+    },
+    {
+      "Name": "MainCamera",
+      "Type": "Camera",
+      "Components": {
+        "GameCameraComponent": {
+          "TargetEntityName": "Player",
+          "Offset": {
+            "X": 0,
+            "Y": 5,
+            "Z": -10
+          },
+          "IsOrbitMode": true,
+          "Yaw": 0,
+          "Pitch": 30,
+          "Distance": 10.0,
+          "Camera": {
+            "Position": {
+              "X": 0,
+              "Y": 7,
+              "Z": -10
+            },
+            "Target": {
+              "X": 0,
+              "Y": 2,
+              "Z": 0
+            },
+            "Up": {
+              "X": 0,
+              "Y": 1,
+              "Z": 0
+            },
+            "Fovy": 45,
+            "Projection": 0
+          }
+        }
+      }
+    }
+  ]
+}
