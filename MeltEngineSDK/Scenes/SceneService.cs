@@ -134,6 +134,12 @@ namespace MeltEngine.Scenes
                     Console.WriteLine($"  → CubeSpawnerComponent: Cooldown={spawner.Cooldown}");
                     break;
 
+                case "BulletSpawnerComponent":
+                    var bulletSpawner = compJsonElement.Deserialize<BulletSpawnerComponent>(SceneSerializer.Options);
+                    entityOperator.AddComponent(entity, bulletSpawner);
+                    Console.WriteLine($"  → BulletSpawnerComponent: Cooldown={bulletSpawner.Cooldown}, Speed={bulletSpawner.BulletSpeed}");
+                    break;
+
                 case "StaticPhysicsBodyComponent":
                     var staticBody = compJsonElement.Deserialize<StaticPhysicsBodyComponent>(SceneSerializer.Options);
                     entityOperator.AddComponent(entity, staticBody);
@@ -156,6 +162,7 @@ namespace MeltEngine.Scenes
                         Yaw = cameraData.Yaw,
                         Pitch = cameraData.Pitch,
                         Distance = cameraData.Distance,
+                        DrawDistance = cameraData.DrawDistance > 0 ? cameraData.DrawDistance : 120.0f,
                         Camera = new Camera3D
                         {
                             Position = cameraData.Camera.Position,

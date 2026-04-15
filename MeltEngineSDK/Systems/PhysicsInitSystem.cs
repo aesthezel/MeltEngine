@@ -1,69 +1,28 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using MagicPhysX;
+using JoltPhysicsSharp;
 using MeltEngine.Core;
 using MeltEngine.Entities;
 using MeltEngine.Entities.Components;
 using MeltEngine.Systems.Interfaces;
-using static MagicPhysX.NativeMethods;
 
 namespace MeltEngine.Systems;
 
-public class PhysicsInitSystem(PhysicsSystem physicsSystem) : ISystem
+public class PhysicsInitSystem(PhysicsManager physicsSystem) : ISystem
 {
-    public unsafe void Update(ECSOperator entityOperator, float deltaTime)
+    public void Update(ECSOperator entityOperator, float deltaTime)
     {
         var coords = entityOperator.GetComponentArray<CoordComponent>();
-
         var dynamicBodies = entityOperator.GetComponentArray<PhysicsBodyComponent>();
+        
+        var bodyInterface = physicsSystem.BodyInterface;
         List<(Entity, PhysicsBodyComponent)> dynamicUpdates = null;
 
-        for (int i = 0; i < dynamicBodies.Count; i++)
-        {
-            var entity = dynamicBodies.DenseEntities[i];
-            var body = dynamicBodies.Components[entity];
-
-            if (body.Actor != null) continue;
-
-            if (!coords.Components.TryGetValue(entity, out var coord))
-            {
-                Console.WriteLine(
-                    $"ADVERTENCIA: Entidad {entity.Id} tiene PhysicsBodyComponent pero no CoordComponent. Se omitirá.");
-                continue;
-            }
-
-            var boxGeo = PxBoxGeometry_new(coord.Scale.X / 2f, coord.Scale.Y / 2f, coord.Scale.Z / 2f);
-            var pxPos = new PxVec3 { x = coord.Position.X, y = coord.Position.Y, z = coord.Position.Z };
-            var transform = PxTransform_new_1(&pxPos);
-            var identity = PxTransform_new_2(PxIDENTITY.PxIdentity);
-
-            var actor = physicsSystem.Physics->PhysPxCreateDynamic(&transform, (PxGeometry*)&boxGeo,
-                physicsSystem.Material, body.Mass, &identity);
-
-            if (actor == null)
-            {
-                Console.WriteLine($"ERROR FATAL: PhysPxCreateDynamic devolvió null para la entidad {entity.Id}.");
-                continue;
-            }
-
-            // --- OPTIMIZACION: Umbral de Sueño Agresivo ---
-            // Le dice a PhysX que si el cubo se mueve muy lento (ej. < 0.5 de energia), lo duerma inmediatamente.
-            NativeMethods.PxRigidDynamic_setSleepThreshold_mut((PxRigidDynamic*)actor, 0.5f);
-            NativeMethods.PxRigidDynamic_setStabilizationThreshold_mut((PxRigidDynamic*)actor, 0.2f);
-            
-            // --- OPTIMIZACION DE CPU MÁXIMA MASA DE COMPONENTES ---
-            // PhysX por defecto usa 4 iteraciones de posicion y 1 de velocidad. 
-            // Para un test de estrés de 50mil cubos cayendo a la vez, bajarlo a 2 reduce el costo de la isla a la mitad (40ms -> 20ms)
-            NativeMethods.PxRigidDynamic_setSolverIterationCounts_mut((PxRigidDynamic*)actor, 2, 1);
-
-            dynamicUpdates ??= new List<(Entity, PhysicsBodyComponent)>();
-            dynamicUpdates.Add((entity, body with { Actor = actor }));
-        }
-
         var cameraArray = entityOperator.GetComponentArray<GameCameraComponent>();
-        Vector3 cameraPos = Vector3.Zero;
+        Vector3 cameraPos = new Vector3(0, 2, 0);
         bool hasCamera = false;
+
         foreach (var cam in cameraArray.Components.Values)
         {
             cameraPos = cam.Camera.Position;
@@ -71,10 +30,68 @@ public class PhysicsInitSystem(PhysicsSystem physicsSystem) : ISystem
             break;
         }
 
+        var velocityArray = entityOperator.GetComponentArray<InitialVelocityComponent>();
+
+        for (int i = 0; i < dynamicBodies.Count; i++)
+        {
+            var entity = dynamicBodies.DenseEntities[i];
+            var body = dynamicBodies.Components[entity];
+
+            if (!body.BodyId.IsInvalid) continue;
+            if (!coords.Components.TryGetValue(entity, out var coord)) continue;
+
+            var halfExtents = new Vector3(coord.Scale.X * 0.5f, coord.Scale.Y * 0.5f, coord.Scale.Z * 0.5f);
+            var boxShape = new BoxShape(halfExtents, 0.0f);
+
+            var rotation = coord.Rotation.LengthSquared() < 0.001f ? Quaternion.Identity : Quaternion.Normalize(coord.Rotation);
+
+            float distSq;
+            if (hasCamera)
+            {
+                distSq = Vector3.DistanceSquared(cameraPos, coord.Position);
+            }
+            else
+            {
+                distSq = coord.Position.X * coord.Position.X + coord.Position.Z * coord.Position.Z;
+            }
+
+            ObjectLayer layer;
+            bool isFar = body.UseLod && distSq > 1600f; // 40 units
+
+            if (isFar)
+            {
+                layer = JoltConfig.LayerDynamicFar;
+            }
+            else
+            {
+                layer = JoltConfig.LayerMoving;
+            }
+
+            var settings = new BodyCreationSettings(
+                boxShape,
+                coord.Position,
+                rotation,
+                MotionType.Dynamic,
+                layer);
+
+            settings.LinearDamping = 0.1f;
+            settings.AngularDamping = 0.1f;
+            settings.Friction = 0.3f;
+            settings.Restitution = 0.05f;
+
+            var bodyId = bodyInterface.CreateAndAddBody(settings, isFar ? Activation.DontActivate : Activation.Activate);
+
+            if (bodyId.IsInvalid) continue;
+
+            dynamicUpdates ??= new List<(Entity, PhysicsBodyComponent)>();
+            dynamicUpdates.Add((entity, body with { BodyId = bodyId }));
+        }
+
         if (dynamicUpdates != null)
         {
-            foreach (var update in dynamicUpdates)
+            for (int i = 0; i < dynamicUpdates.Count; i++)
             {
+                var update = dynamicUpdates[i];
                 var entity = update.Item1;
                 var body = update.Item2;
 
@@ -85,56 +102,64 @@ public class PhysicsInitSystem(PhysicsSystem physicsSystem) : ISystem
                     if (distSq > disableDistSq)
                     {
                         body.IsLodDisabled = true;
+                        bodyInterface.RemoveBody(body.BodyId);
+                    }
+                }
+
+                if (velocityArray.Components.TryGetValue(entity, out var velocity) && !body.IsLodDisabled)
+                {
+                    if (velocity.LinearVelocity != Vector3.Zero)
+                    {
+                        bodyInterface.SetLinearVelocity(body.BodyId, velocity.LinearVelocity);
+                    }
+                    if (velocity.AngularVelocity != Vector3.Zero)
+                    {
+                        bodyInterface.SetAngularVelocity(body.BodyId, velocity.AngularVelocity);
                     }
                 }
 
                 dynamicBodies.Components[entity] = body;
-                if (!body.IsLodDisabled)
-                {
-                    physicsSystem.AddActor((PxActor*)body.Actor);
-                }
             }
         }
 
         var staticBodies = entityOperator.GetComponentArray<StaticPhysicsBodyComponent>();
         List<(Entity, StaticPhysicsBodyComponent)> staticUpdates = null;
 
-        foreach (var kvp in staticBodies.Components)
+        for (int i = 0; i < staticBodies.Count; i++)
         {
-            var entity = kvp.Key;
-            var body = kvp.Value;
+            var entity = staticBodies.DenseEntities[i];
+            var body = staticBodies.Components[entity];
 
-            if (body.Actor != null) continue;
+            if (!body.BodyId.IsInvalid) continue;
+            if (!coords.Components.TryGetValue(entity, out var coord)) continue;
 
-            if (!coords.Components.TryGetValue(entity, out var coord))
-            {
-                Console.WriteLine(
-                    $"ADVERTENCIA: Entidad {entity.Id} tiene StaticPhysicsBodyComponent pero no CoordComponent. Se omitirá.");
-                continue;
-            }
+            var halfExtents = new Vector3(coord.Scale.X * 0.5f, coord.Scale.Y * 0.5f, coord.Scale.Z * 0.5f);
+            var boxShape = new BoxShape(halfExtents, 0.0f);
 
-            var boxGeo = PxBoxGeometry_new(coord.Scale.X / 2f, coord.Scale.Y / 2f, coord.Scale.Z / 2f);
-            var pxPos = new PxVec3 { x = coord.Position.X, y = coord.Position.Y, z = coord.Position.Z };
-            var transform = PxTransform_new_1(&pxPos);
-            var identity = PxTransform_new_2(PxIDENTITY.PxIdentity);
+            var rotation = coord.Rotation.LengthSquared() < 0.001f ? Quaternion.Identity : Quaternion.Normalize(coord.Rotation);
 
-            var actor = physicsSystem.Physics->PhysPxCreateStatic(&transform, (PxGeometry*)&boxGeo,
-                physicsSystem.Material, &identity);
+            var settings = new BodyCreationSettings(
+                boxShape,
+                coord.Position,
+                rotation,
+                MotionType.Static,
+                JoltConfig.LayerNonMoving);
 
-            if (actor == null)
-            {
-                Console.WriteLine($"ERROR FATAL: PhysPxCreateStatic devolvió null para la entidad {entity.Id}.");
-                continue;
-            }
+            settings.Friction = 0.5f;
+
+            var bodyId = bodyInterface.CreateAndAddBody(settings, Activation.DontActivate);
+
+            if (bodyId.IsInvalid) continue;
 
             staticUpdates ??= new List<(Entity, StaticPhysicsBodyComponent)>();
-            staticUpdates.Add((entity, body with { Actor = actor }));
+            staticUpdates.Add((entity, body with { BodyId = bodyId }));
         }
 
         if (staticUpdates != null)
         {
-            foreach (var update in staticUpdates)
+            for (int i = 0; i < staticUpdates.Count; i++)
             {
+                var update = staticUpdates[i];
                 var entity = update.Item1;
                 var body = update.Item2;
 
@@ -145,15 +170,14 @@ public class PhysicsInitSystem(PhysicsSystem physicsSystem) : ISystem
                     if (distSq > disableDistSq)
                     {
                         body.IsLodDisabled = true;
+                        bodyInterface.RemoveBody(body.BodyId);
                     }
                 }
 
                 staticBodies.Components[entity] = body;
-                if (!body.IsLodDisabled)
-                {
-                    physicsSystem.AddActor((PxActor*)body.Actor);
-                }
             }
+
+            physicsSystem.OptimizeBroadPhase();
         }
     }
 }

@@ -14,5 +14,8 @@ namespace MeltEngine.Entities.Components
         public float Yaw;
         public float Pitch;
         public float Distance;
+
+        // Distancia máxima de dibujado (frustum culling)
+        public float DrawDistance;
     }
 }

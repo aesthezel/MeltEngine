@@ -11,6 +11,8 @@ namespace MeltEngine.Systems
     public class CameraSystem : ISystem
     {
         private const float MouseSensitivity = 0.05f;
+        private const float MaxMouseDeltaPerFrame = 50.0f;
+        private bool _skipNextMouseDelta = false;
 
         public void Update(ECSOperator entityOperator, float deltaTime)
         {
@@ -36,11 +38,25 @@ namespace MeltEngine.Systems
 
                 if (updatedCamera.IsOrbitMode)
                 {
-                    // Capturar ratón si no está ya deshabilitado
-                    if (!Raylib.IsCursorHidden()) Raylib.DisableCursor();
+                    // Capturar ratón si no está ya deshabilitado; saltar delta del primer frame
+                    if (!Raylib.IsCursorHidden())
+                    {
+                        Raylib.DisableCursor();
+                        _skipNextMouseDelta = true;
+                    }
 
-                    // Leer entrada de ratón
+                    // Leer entrada de ratón (ignorar primer frame para evitar salto brusco)
                     var mouseDelta = Raylib.GetMouseDelta();
+                    if (_skipNextMouseDelta)
+                    {
+                        mouseDelta = System.Numerics.Vector2.Zero;
+                        _skipNextMouseDelta = false;
+                    }
+
+                    // Limitar delta máximo por frame para evitar saltos bruscos
+                    mouseDelta.X = Math.Clamp(mouseDelta.X, -MaxMouseDeltaPerFrame, MaxMouseDeltaPerFrame);
+                    mouseDelta.Y = Math.Clamp(mouseDelta.Y, -MaxMouseDeltaPerFrame, MaxMouseDeltaPerFrame);
+
                     updatedCamera.Yaw -= mouseDelta.X * MouseSensitivity;
                     updatedCamera.Pitch -= mouseDelta.Y * MouseSensitivity;
 

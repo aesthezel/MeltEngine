@@ -12,6 +12,7 @@ namespace MeltEngine.Utils.Serialization
         public float Yaw { get; set; }
         public float Pitch { get; set; }
         public float Distance { get; set; }
+        public float DrawDistance { get; set; } = 120.0f;
     }
     
     public class CameraData

@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep:*)",
+      "Bash(dotnet build:*)",
+      "Bash(where dotnet:*)",
+      "Read(//c/Program Files/dotnet/**)",
+      "Read(//c/Program Files \\(x86\\)/dotnet/**)",
+      "Bash(\"/c/Program Files/dotnet/dotnet.exe\" build \"G:/Empresarial/Aesthezel/Git/MeltEngine/MeltEngineSDK/MeltEngineSDK.csproj\" --no-restore)",
+      "Bash(grep -r \"MaxBodies\\\\|MaxBodyPairs\\\\|ContactConstraints\\\\|Gravity\" MeltEngineSDK/*.cs MeltEngineSDK/*/*.cs)",
+      "Bash(cmd /c \"cd /d G:\\\\Empresarial\\\\Aesthezel\\\\Git\\\\MeltEngine && dotnet build --no-restore -v quiet 2>&1\")",
+      "Bash(powershell.exe -Command \"cd 'G:\\\\Empresarial\\\\Aesthezel\\\\Git\\\\MeltEngine'; dotnet build --no-restore -v quiet 2>&1 | Select-Object -Last 20\")"
+    ]
+  }
+}

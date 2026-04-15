@@ -1,16 +1,18 @@
 using System.Text.Json.Serialization;
-using MagicPhysX;
+using JoltPhysicsSharp;
 
 namespace MeltEngine.Entities.Components;
 
-public unsafe struct StaticPhysicsBodyComponent
+public struct StaticPhysicsBodyComponent
 {
     [JsonIgnore]
-    public PxRigidStatic* Actor;
+    public BodyID BodyId = BodyID.Invalid;
 
     public bool UseLod { get; init; }
     public float LodDisableDistance { get; init; }
-    
+
     [JsonIgnore]
     public bool IsLodDisabled { get; set; }
+
+    public StaticPhysicsBodyComponent() { }
 }

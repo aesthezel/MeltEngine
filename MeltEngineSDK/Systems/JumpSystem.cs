@@ -1,17 +1,16 @@
 using System;
 using System.Numerics;
-using MagicPhysX;
 using MeltEngine.Core;
 using MeltEngine.Entities.Components;
 using MeltEngine.Systems.Interfaces;
 
 namespace MeltEngine.Systems;
 
-public class JumpSystem : ISystem
+public class JumpSystem(PhysicsManager physicsSystem) : ISystem
 {
     private readonly Random _random = new Random();
 
-    public unsafe void Update(ECSOperator entityOperator, float deltaTime)
+    public void Update(ECSOperator entityOperator, float deltaTime)
     {
         var jumps = entityOperator.GetComponentArray<JumpComponent>();
         var physics = entityOperator.GetComponentArray<PhysicsBodyComponent>();
@@ -21,7 +20,7 @@ public class JumpSystem : ISystem
             var entity = jumps.DenseEntities[i];
             var jump = jumps.Components[entity];
 
-            if (!physics.Components.TryGetValue(entity, out var body) || body.Actor == null)
+            if (!physics.Components.TryGetValue(entity, out var body) || body.BodyId.IsInvalid)
                 continue;
 
             if (body.IsLodDisabled) continue;
@@ -39,17 +38,14 @@ public class JumpSystem : ISystem
         }
     }
 
-    private unsafe void ApplyJump(PhysicsBodyComponent body, JumpComponent jump)
+    private void ApplyJump(PhysicsBodyComponent body, JumpComponent jump)
     {
         float forceX = Lerp(jump.MinJumpForce.X, jump.MaxJumpForce.X, (float)_random.NextDouble());
         float forceY = Lerp(jump.MinJumpForce.Y, jump.MaxJumpForce.Y, (float)_random.NextDouble());
         float forceZ = Lerp(jump.MinJumpForce.Z, jump.MaxJumpForce.Z, (float)_random.NextDouble());
 
-        var impulse = new PxVec3 { x = forceX, y = forceY, z = forceZ };
-
-        // Obtenemos la velocidad actual para sumar el salto vertical sin perder memento horizontal si se desea, 
-        // pero aquí aplicamos directamente un setLinearVelocity como impulso para simplificar el comportamiento de "salto" ECS.
-        NativeMethods.PxRigidDynamic_setLinearVelocity_mut(body.Actor, &impulse, true);
+        var impulse = new Vector3(forceX, forceY, forceZ);
+        physicsSystem.BodyInterface.SetLinearVelocity(body.BodyId, impulse);
     }
 
     private float Lerp(float firstFloat, float secondFloat, float by)

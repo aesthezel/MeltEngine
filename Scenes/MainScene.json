@@ -60,9 +60,16 @@
           "Speed": 50.0,
           "IsGodMode": true
         },
-        "CubeSpawnerComponent": {
-          "Cooldown": 0.2,
-          "CurrentCooldown": 0.0
+        "BulletSpawnerComponent": {
+          "Cooldown": 0.1,
+          "CurrentCooldown": 0.0,
+          "BulletSpeed": 30,
+          "BulletScale": {
+            "X": 0.2,
+            "Y": 0.2,
+            "Z": 0.4
+          },
+          "BulletMass": 1
         },
         "EnabledComponent": {},
         "PhysicsBodyComponent": {
@@ -85,6 +92,7 @@
           "Yaw": 0,
           "Pitch": 30,
           "Distance": 10.0,
+          "DrawDistance": 500.0,
           "Camera": {
             "Position": {
               "X": 0,

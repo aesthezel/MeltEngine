@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using MeltEngine.Entities.Components;
@@ -18,74 +19,67 @@ namespace MeltEngine.Core
         {
             try
             {
-                // Inicializar Raylib
                 Raylib.InitWindow(1920, 1080, "MeltEngineSDK - Scene System");
                 Raylib.SetTargetFPS(460);
 
                 var entityOperator = new ThreadSafeECSOperator();
-                var physicsSystem = new PhysicsSystem();
+                var physicsSystem = new PhysicsManager();
 
-                // Cargar escena desde archivo JSON
                 await LoadDefaultScene(entityOperator);
-
-                // Ejecutar prueba de estrés masiva (100,000 cubos)
                 PrewarmStressTest(entityOperator);
 
-                // Sistemas del motor
                 var systems = new List<ISystem>
                 {
                     new PhysicsInitSystem(physicsSystem),
-                    new CubeSpawnerSystem(),
-                    new JumpSystem(),
-                    new MovementSystem(),
+                    new BulletSpawnerSystem(),
+                    new JumpSystem(physicsSystem),
+                    new MovementSystem(physicsSystem),
                     new CameraSystem(),
-                    new RenderSystem(),
                     new LifecycleSystem()
                 };
 
                 var updateSystems = systems.Where(s => s is not RenderSystem and not LifecycleSystem).ToArray();
                 var lifecycleSystem = systems.OfType<LifecycleSystem>().FirstOrDefault();
-                var renderSystem = systems.OfType<RenderSystem>().FirstOrDefault();
+                var renderSystem = new RenderSystem(physicsSystem);
 
-                const float fixedDeltaTime = 1.0f / 60.0f;
-                var accumulator = 0.0f;
+                float physicsAccumulator = 0f;
+                var stopwatch = Stopwatch.StartNew();
 
                 while (!Raylib.WindowShouldClose())
                 {
-                    var deltaTime = Raylib.GetFrameTime();
+                    var frameTime = Raylib.GetFrameTime();
 
-                    // Procesar operaciones pendientes
                     entityOperator.ProcessPendingOperations();
 
-                    // Detectar recarga de escena con F5
                     if (Raylib.IsKeyPressed(KeyboardKey.F5))
                     {
                         Console.WriteLine("Recargando escena...");
                         await ReloadScene(entityOperator);
                     }
 
-                    accumulator += deltaTime;
-
-                    int maxSteps = 2; // Anti-death-spiral
-                    int steps = 0;
-
-                    while (accumulator >= fixedDeltaTime && steps < maxSteps)
+                    foreach (var system in updateSystems)
                     {
-                        foreach (var system in updateSystems)
-                        {
-                            system.Update(entityOperator, fixedDeltaTime);
-                        }
-
-                        physicsSystem.Update(entityOperator, fixedDeltaTime);
-                        accumulator -= fixedDeltaTime;
-                        steps++;
+                        system.Update(entityOperator, frameTime);
                     }
 
-                    // Si la simulación tomó demasiado tiempo, reseteamos el acumulador para no asfixiar el framerate de Render
-                    if (steps >= maxSteps) accumulator = 0.0f;
+                    physicsAccumulator += frameTime;
+                    int physicsSteps = 0;
 
-                    lifecycleSystem?.Update(entityOperator, deltaTime);
-                    renderSystem?.Update(entityOperator, deltaTime);
+                    while (physicsAccumulator >= PhysicsManager.FIXED_DELTA_TIME && physicsSteps < 3)
+                    {
+                        physicsSystem.Simulate(PhysicsManager.FIXED_DELTA_TIME);
+                        physicsAccumulator -= PhysicsManager.FIXED_DELTA_TIME;
+                        physicsSteps++;
+                    }
+
+                    if (physicsAccumulator > PhysicsManager.FIXED_DELTA_TIME * 4f)
+                        physicsAccumulator = 0f;
+
+                    physicsSystem.UpdateLod(entityOperator);
+                    physicsSystem.Update(entityOperator);
+
+                    lifecycleSystem?.Update(entityOperator, frameTime);
+                    renderSystem.Update(entityOperator, frameTime);
                 }
 
                 physicsSystem.Cleanup();
@@ -224,16 +218,16 @@ namespace MeltEngine.Core
 
         private static void PrewarmStressTest(ECSOperator entityOperator)
         {
-            const int count = 50000;
+            const int count = 20000;
             Console.WriteLine($"=== INICIANDO PREWARM DE STRESS TEST: {count} CUBOS (TORRE MASSIVA) ===");
 
-            int sizeXZ = 20; // Base de 20x20 = 400 cubos si fuera sólida, pero ahora es hueca
-            int layers = 1000; // Suficientes capas para llegar a 50,000 (aprox 76 por nivel)
+            int sizeXZ = 32; // Base de 20x20 = 400 cubos si fuera sólida, pero ahora es hueca
+            int layers = 2000; // Suficientes capas para llegar a 50,000 (aprox 76 por nivel)
             float spacing = 1.05f; // Un pequeño espaciado para evitar explosiones de físicas iniciales
 
             // Aparecer a una pequeña distancia del jugador
-            float startX = 25f;
-            float startZ = 25f;
+            float startX = -25f;
+            float startZ = -25f;
 
             int built = 0;
 
