@@ -31,6 +31,7 @@ public class PhysicsInitSystem(PhysicsManager physicsSystem) : ISystem
         }
 
         var velocityArray = entityOperator.GetComponentArray<InitialVelocityComponent>();
+        var playerControls = entityOperator.GetComponentArray<PlayerControllableComponent>();
 
         for (int i = 0; i < dynamicBodies.Count; i++)
         {
@@ -78,6 +79,11 @@ public class PhysicsInitSystem(PhysicsManager physicsSystem) : ISystem
             settings.AngularDamping = 0.1f;
             settings.Friction = 0.3f;
             settings.Restitution = 0.05f;
+            
+            if (playerControls.Components.ContainsKey(entity))
+            {
+                settings.AllowedDOFs = AllowedDOFs.TranslationX | AllowedDOFs.TranslationY | AllowedDOFs.TranslationZ;
+            }
 
             var bodyId = bodyInterface.CreateAndAddBody(settings, isFar ? Activation.DontActivate : Activation.Activate);
 

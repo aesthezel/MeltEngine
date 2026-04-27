@@ -20,7 +20,7 @@ public class Program
         Console.WriteLine("Detalles del error:");
         Console.WriteLine(e.ToString());
 
-        Console.WriteLine("\nPresiona Enter para cerrar...");
+        Console.WriteLine("\nPresiona ENTER para cerrar...");
         Console.ReadLine();
         Environment.Exit(1);
     }

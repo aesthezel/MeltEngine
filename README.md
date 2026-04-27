@@ -4,7 +4,7 @@ A Raylib-based engine, trying to mimic a ~~[Component Pattern](https://medium.co
 ## Technologies
 - .NET 9
 - [raylib-cs 7.0.1](https://github.com/raylib-cs/raylib-cs)
-- [MagicPhysX 1.0.0](https://github.com/Cysharp/MagicPhysX)
+- [JoltPhysicsSharp](https://github.com/nicebyte/JoltPhysicsSharp) - High-performance physics engine
 
 ## Changelog
 - _I'll promise to update this later..._

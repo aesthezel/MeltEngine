@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using MeltEngine.Entities;
@@ -9,10 +9,10 @@ namespace MeltEngine.Core
 {
     public class ECSOperator
     {
-        private int _nextEntityId;
+        private int _nextEntityId = 1;
         private readonly Queue<Entity> _availableEntities = new();
         private readonly Dictionary<Type, IComponentArray> _componentArrays = new();
-        public int ActiveEntityCount => _nextEntityId - _availableEntities.Count;
+        public int ActiveEntityCount => (_nextEntityId - 1) - _availableEntities.Count;
 
         public Entity CreateEntity()
         {

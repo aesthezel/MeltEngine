@@ -34,7 +34,7 @@ namespace MeltEngine.Systems
                 }
 
                 var updatedCamera = cameraComponent;
-                var targetPosition = targetCoord.Position;
+                var targetPosition = Vector3.Lerp(targetCoord.PreviousPosition, targetCoord.Position, Time.Alpha);
 
                 if (updatedCamera.IsOrbitMode)
                 {

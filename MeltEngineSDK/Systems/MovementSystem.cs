@@ -61,9 +61,20 @@ public class MovementSystem(PhysicsManager physicsSystem) : ISystem
                     if (Raylib.IsKeyDown(KeyboardKey.Space)) moveDir += Vector3.UnitY;
                     if (Raylib.IsKeyDown(KeyboardKey.LeftShift)) moveDir -= Vector3.UnitY;
                 }
+
+                if (moveDir != Vector3.Zero)
+                {
+                    moveDir = Vector3.Normalize(moveDir) * currentSpeed;
+                    physicsSystem.BodyInterface.SetLinearVelocity(physicsBody.BodyId, moveDir);
+                }
+                else
+                {
+                    physicsSystem.BodyInterface.SetLinearVelocity(physicsBody.BodyId, Vector3.Zero);
+                }
             }
             else
             {
+                bool jumpPressed = false;
                 if (activeCamera.HasValue)
                 {
                     var cam = activeCamera.Value.Camera;
@@ -76,7 +87,7 @@ public class MovementSystem(PhysicsManager physicsSystem) : ISystem
                     if (Raylib.IsKeyDown(KeyboardKey.D)) moveDir += flatRight;
                     if (Raylib.IsKeyDown(KeyboardKey.A)) moveDir -= flatRight;
 
-                    if (Raylib.IsKeyDown(KeyboardKey.Space)) moveDir.Y += 2;
+                    if (Raylib.IsKeyPressed(KeyboardKey.Space)) jumpPressed = true;
                 }
                 else
                 {
@@ -84,18 +95,32 @@ public class MovementSystem(PhysicsManager physicsSystem) : ISystem
                     if (Raylib.IsKeyDown(KeyboardKey.S)) moveDir.Z -= 1;
                     if (Raylib.IsKeyDown(KeyboardKey.A)) moveDir.X += 1;
                     if (Raylib.IsKeyDown(KeyboardKey.D)) moveDir.X -= 1;
-                    if (Raylib.IsKeyDown(KeyboardKey.Space)) moveDir.Y += 2;
+                    
+                    if (Raylib.IsKeyPressed(KeyboardKey.Space)) jumpPressed = true;
                 }
-            }
 
-            if (moveDir != Vector3.Zero)
-            {
-                moveDir = Vector3.Normalize(moveDir) * currentSpeed;
-                physicsSystem.BodyInterface.SetLinearVelocity(physicsBody.BodyId, moveDir);
-            }
-            else if (controllable.IsGodMode)
-            {
-                physicsSystem.BodyInterface.SetLinearVelocity(physicsBody.BodyId, Vector3.Zero);
+                Vector3 currentVel = physicsSystem.BodyInterface.GetLinearVelocity(physicsBody.BodyId);
+                Vector3 targetVel = new Vector3(currentVel.X, currentVel.Y, currentVel.Z);
+
+                if (moveDir != Vector3.Zero)
+                {
+                    moveDir = Vector3.Normalize(moveDir) * currentSpeed;
+                    targetVel.X = moveDir.X;
+                    targetVel.Z = moveDir.Z;
+                }
+                else
+                {
+                    // Fricción horizontal si no se presionan teclas
+                    targetVel.X = 0;
+                    targetVel.Z = 0;
+                }
+
+                if (jumpPressed)
+                {
+                    targetVel.Y = 8.0f; // Impulso de salto
+                }
+
+                physicsSystem.BodyInterface.SetLinearVelocity(physicsBody.BodyId, targetVel);
             }
         }
     }

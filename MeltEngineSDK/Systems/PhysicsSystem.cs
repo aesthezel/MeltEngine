@@ -29,10 +29,18 @@ public class PhysicsManager : IDisposable
     public void AddShape(Shape shape) { }
     public bool OptimizeBroadPhase() 
     { 
-        if (_broadPhaseOptimized) return false;
         _physics.OptimizeBroadPhase();
         _broadPhaseOptimized = true;
         return true;
+    }
+
+    /// <summary>
+    /// Marks broadphase as needing re-optimization (e.g., after placing/removing blocks).
+    /// The next call to OptimizeBroadPhase() will execute.
+    /// </summary>
+    public void RequestBroadPhaseOptimization()
+    {
+        _broadPhaseOptimized = false;
     }
 
     public PhysicsManager()
