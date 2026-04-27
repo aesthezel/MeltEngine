@@ -1,0 +1,47 @@
+[
+  {
+    "Id": 1,
+    "Name": "Grass",
+    "FaceIndices": [551, 551, 575, 553, 551, 551]
+  },
+  {
+    "Id": 2,
+    "Name": "Dirt",
+    "FaceIndices": [553, 553, 553, 553, 553, 553]
+  },
+  {
+    "Id": 3,
+    "Name": "Stone",
+    "FaceIndices": [3, 3, 3, 3, 3, 3]
+  },
+  {
+    "Id": 4,
+    "Name": "Water",
+    "FaceIndices": [477, 477, 477, 477, 477, 477]
+  },
+  {
+    "Id": 5,
+    "Name": "Sand",
+    "FaceIndices": [66, 66, 66, 66, 66, 66]
+  },
+  {
+    "Id": 6,
+    "Name": "Wood",
+    "FaceIndices": [4, 4, 5, 5, 4, 4]
+  },
+  {
+    "Id": 7,
+    "Name": "Leaves",
+    "FaceIndices": [131, 131, 131, 131, 131, 131]
+  },
+  {
+    "Id": 8,
+    "Name": "Bedrock",
+    "FaceIndices": [25, 25, 25, 25, 25, 25]
+  },
+  {
+    "Id": 9,
+    "Name": "Brick",
+    "FaceIndices": [7, 7, 7, 7, 7, 7]
+  }
+]

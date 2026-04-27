@@ -1,0 +1,45 @@
+[
+  {
+    "Name": "BulletDemo-Simple",
+    "Entities": [
+      {
+        "Name": "Spawner",
+        "Components": {
+          "CoordComponent": {"Position": {"X": 0, "Y": 0, "Z": 0}, "Scale": {"X": 1, "Y": 1, "Z": 1}},
+          "BulletSpawnerComponent": {
+            "Cooldown": 0.2,
+            "CurrentCooldown": 0,
+            "BulletSpeed": 40,
+            "BulletScale": {"X": 0.2, "Y": 0.2, "Z": 0.4},
+            "BulletMass": 1
+          },
+          "EnabledComponent": {},
+          "SceneMemberComponent": {"SceneName": "BulletDemo"}
+        }
+      }
+    ]
+  },
+  {
+    "Name": "BulletDemo-DoubleSpawners",
+    "Entities": [
+      {
+        "Name": "SpawnerLeft",
+        "Components": {
+          "CoordComponent": {"Position": {"X": -2, "Y": 0, "Z": 0}, "Scale": {"X": 1, "Y": 1, "Z": 1}},
+          "BulletSpawnerComponent": {"Cooldown": 0.3, "CurrentCooldown": 0, "BulletSpeed": 30, "BulletScale": {"X": 0.2, "Y": 0.2, "Z": 0.4}, "BulletMass": 0.8},
+          "EnabledComponent": {},
+          "SceneMemberComponent": {"SceneName": "BulletDemo"}
+        }
+      },
+      {
+        "Name": "SpawnerRight",
+        "Components": {
+          "CoordComponent": {"Position": {"X": 2, "Y": 0, "Z": 0}, "Scale": {"X": 1, "Y": 1, "Z": 1}},
+          "BulletSpawnerComponent": {"Cooldown": 0.3, "CurrentCooldown": 0, "BulletSpeed": 30, "BulletScale": {"X": 0.2, "Y": 0.2, "Z": 0.4}, "BulletMass": 0.8},
+          "EnabledComponent": {},
+          "SceneMemberComponent": {"SceneName": "BulletDemo"}
+        }
+      }
+    ]
+  }
+]

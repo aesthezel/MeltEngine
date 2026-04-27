@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeltEngine", "MeltEngine\MeltEngine.csproj", "{C16FA9B3-59DA-4B37-8D0D-AE18C8E25AA6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeltEngineSDK", "MeltEngineSDK\MeltEngineSDK.csproj", "{C16FA9B3-59DA-4B37-8D0D-AE18C8E25AA6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
